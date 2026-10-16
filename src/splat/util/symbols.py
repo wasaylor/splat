@@ -266,6 +266,9 @@ def handle_sym_addrs(
                             if attr_name == "can_be_referenced":
                                 sym.can_be_referenced = tf_val
                                 continue
+                            if attr_name == "can_be_referenced_with_addend":
+                                sym.can_be_referenced_with_addend = tf_val
+                                continue
                             if attr_name == "allow_duplicated":
                                 sym.allow_duplicated = True
                                 continue
@@ -495,6 +498,8 @@ def add_symbol_to_spimdisasm_segment(
         context_sym.allowedToReferenceSymbols = sym.can_reference
     if sym.can_be_referenced is not None:
         context_sym.allowedToBeReferenced = sym.can_be_referenced
+    if sym.can_be_referenced_with_addend is not None:
+        context_sym.allowedToBeReferencedWithAddend = sym.can_be_referenced_with_addend
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
     if sym.given_name_end:
         context_sym.nameEnd = sym.given_name_end
@@ -616,6 +621,7 @@ class Symbol:
 
     can_reference: Optional[bool] = None
     can_be_referenced: Optional[bool] = None
+    can_be_referenced_with_addend: Optional[bool] = None
 
     linker_section: Optional[str] = None
 

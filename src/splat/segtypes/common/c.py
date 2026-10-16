@@ -1,7 +1,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Optional, Set, List
+from typing import Dict, Optional, Set, List
 
 import rabbitizer
 import spimdisasm
@@ -33,6 +33,9 @@ class CommonSegC(CommonSegCodeSubsegment):
         self.defined_funcs: Set[str] = set()
         self.global_asm_funcs: Set[str] = set()
         self.global_asm_rodata_syms: Set[str] = set()
+        self.sdata_by_function: Dict[int, List[spimdisasm.mips.symbols.SymbolBase]] = (
+            {}
+        )
 
         self.file_extension = "c"
 
@@ -217,6 +220,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                 )
             )
 
+            # And the small data symbols each function owns
+            self.sdata_by_function = self.get_sdata_for_functions()
+
             is_new_c_file = False
 
             # Check and create the C file
@@ -336,6 +342,33 @@ class CommonSegC(CommonSegCodeSubsegment):
                     "\t Try to force the migration of that symbol with `force_migration:True` in the symbol_addrs.txt file; or avoid the migration of symbols around this address with `force_not_migration:True`"
                 )
 
+    def get_sdata_for_functions(
+        self,
+    ) -> Dict[int, List[spimdisasm.mips.symbols.SymbolBase]]:
+        """Anonymous `.sdata` symbols referenced by exactly one function and nothing else, keyed by that
+        function's vram. Compilers using a small data section (like EE-GCC with `-G8`) put each function's
+        small constants there right after the function, so they go with the function's asm."""
+        if not options.opts.migrate_sdata_to_functions:
+            return {}
+        sibling = self.siblings.get(".sdata")
+        if sibling is None or sibling.spim_section is None:
+            return {}
+        section = sibling.spim_section.get_section()
+        result: Dict[int, List[spimdisasm.mips.symbols.SymbolBase]] = {}
+        for sym in section.symbolList:
+            context_sym = sym.contextSym
+            if context_sym.forceNotMigration:
+                continue
+            if context_sym.isUserDeclared and not context_sym.forceMigration:
+                continue
+            if len(context_sym.referenceSymbols) > 0:
+                continue
+            if len(context_sym.referenceFunctions) != 1:
+                continue
+            func = next(iter(context_sym.referenceFunctions))
+            result.setdefault(func.vram, []).append(sym)
+        return result
+
     def create_c_asm_file(
         self,
         func_rodata_entry: spimdisasm.mips.FunctionRodataEntry,
@@ -361,6 +394,22 @@ class CommonSegC(CommonSegCodeSubsegment):
             rabbitizer.config.regNames_namedRegisters = (
                 options.opts.named_regs_for_c_funcs
             )
+            if func_rodata_entry.function is not None:
+                sdata_syms = self.sdata_by_function.get(
+                    func_rodata_entry.function.vram, []
+                )
+                if len(sdata_syms) > 0:
+                    # The function's own small data (literals), like migrated rodata. End on `.text`
+                    # since the function may have no rodata to switch back from.
+                    f.write(".section .sdata\n")
+                    for sym in sdata_syms:
+                        f.write(
+                            sym.disassemble(
+                                migrate=True, useGlobalLabel=True, isSplittedSymbol=True
+                            )
+                        )
+                        f.write("\n")
+                    f.write(".section .text\n\n")
             func_rodata_entry.writeToFile(f)
             rabbitizer.config.regNames_namedRegisters = named_registers_opt
 

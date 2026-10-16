@@ -99,6 +99,10 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
             options.opts.detect_redundant_function_end
         )
 
+        spimdisasm.common.GlobalConfig.GP_REL_HACK_FLOAT_LITERALS_AS_LI_S = (
+            options.opts.use_li_s_for_float_literals
+        )
+
         spimdisasm.common.GlobalConfig.GP_VALUE = options.opts.gp
 
         spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL = options.opts.asm_function_macro

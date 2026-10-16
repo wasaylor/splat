@@ -786,6 +786,10 @@ Determines whether to detect and hint to the user about possible rodata sections
 
 Determines whether to attempt to automatically migrate rodata into functions
 
+### migrate_sdata_to_functions
+
+Determines whether to attempt to automatically migrate small data (`.sdata`) into the functions that reference it, the same way `migrate_rodata_to_functions` does for rodata. A symbol with `force_not_migration` is never migrated, and one declared in a symbol file is only migrated when it sets `force_migration`.
+
 ### asm_inc_header
 
 Determines the header to be used in every asm file that's included from c files
@@ -966,6 +970,16 @@ Defaults to `True`
 Does the same as `use_gp_rel_macro_nonmatching`, except it is only applied to `asm` and `hasm` segments.
 
 Defaults to `True`
+
+### use_li_s_for_float_literals
+
+When `%gp_rel` is stripped (see `use_gp_rel_macro_nonmatching` and `use_gp_rel_macro`), emit the gp-relative `lwc1` loads of float literals from a `.lit4` section as `li.s $fN, <value>` instead.
+
+Compilers like EE-GCC emit `li.s` for float constants and let the assembler append each one to the object's `.lit4` section, in first use order. Functions included into a C file with `INCLUDE_ASM` need to do the same, so their literals end up in the C object's `.lit4` the same way the original ones did.
+
+A literal is only converted if every gp-relative reference to it in the function is a plain `lwc1`, and only if the assembler itself would place it in `.lit4` (both 16-bit halves non-zero, a normal finite float). Single-precision only, and the assembler needs `-G 4` or larger.
+
+Defaults to `False`
 
 ### suggestion_rodata_section_start
 

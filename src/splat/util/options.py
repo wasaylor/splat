@@ -196,6 +196,8 @@ class SplatOpts:
     # Determines whether to attempt to automatically migrate rodata into functions
     # (only works in certain circumstances)
     migrate_rodata_to_functions: bool
+    # Migrate the anonymous small data symbols (`.sdata`) referenced by a single function into that function's asm file
+    migrate_sdata_to_functions: bool
     # Determines the header to be used in every asm file that's included from c files
     asm_inc_header: str
     # Determines the macro used to declare functions in asm files
@@ -269,6 +271,8 @@ class SplatOpts:
     use_gp_rel_macro_nonmatching: bool
     # Does the same as `use_gp_rel_macro_nonmatching`, except it is only applied to `asm` and `hasm` segments.
     use_gp_rel_macro: bool
+    # When `%gp_rel` is stripped, emit gp-relative `lwc1` loads of `.lit4` float literals as `li.s $fN, <value>`
+    use_li_s_for_float_literals: bool
     # Allows emitting suggestions for where the rodata may start by examining the data section.
     suggestion_rodata_section_start: bool
 
@@ -584,6 +588,9 @@ def _parse_yaml(
         migrate_rodata_to_functions=p.parse_opt(
             "migrate_rodata_to_functions", bool, True
         ),
+        migrate_sdata_to_functions=p.parse_opt(
+            "migrate_sdata_to_functions", bool, False
+        ),
         asm_inc_header=p.parse_opt("asm_inc_header", str, comp.asm_inc_header),
         asm_function_macro=p.parse_opt(
             "asm_function_macro", str, comp.asm_function_macro
@@ -664,6 +671,9 @@ def _parse_yaml(
             "use_gp_rel_macro_nonmatching", bool, True
         ),
         use_gp_rel_macro=p.parse_opt("use_gp_rel_macro", bool, True),
+        use_li_s_for_float_literals=p.parse_opt(
+            "use_li_s_for_float_literals", bool, False
+        ),
         suggestion_rodata_section_start=p.parse_opt(
             "suggestion_rodata_section_start", bool, True
         ),

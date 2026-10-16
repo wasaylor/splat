@@ -207,6 +207,20 @@ Defaults to `True`.
 dummy_symbol = 0x800782B0; // can_be_referenced:True
 ```
 
+### `can_be_referenced_with_addend`
+
+Allows (or prohibits) references to the middle of this symbol, like `sym + 0x10`. References to the symbol's own address are not affected.
+
+This is useful for big sized symbols that the code never points into at a fixed address, like a statically allocated heap arena that is only referenced by its start. Without it, any value that happens to fall within its range (a constant, a mask, `_gp`) is symbolized as `sym + offset`.
+
+Defaults to `True`.
+
+**Example:**
+
+```ini
+membuffer = 0x003B0380; // size:0x1AE1C00 can_be_referenced_with_addend:False
+```
+
 ### `allow_duplicated`
 
 Tells splat that a symbol is allowed to have its vram/name duplicated with another symbol.
