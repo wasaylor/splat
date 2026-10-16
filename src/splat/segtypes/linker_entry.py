@@ -672,6 +672,8 @@ class LinkerWriter:
 
     def _begin_section(self, seg_name: str, cur_section: str) -> None:
         section_start = get_segment_section_start(seg_name, cur_section)
+        if options.opts.ld_align_section_start is not None:
+            self._writeln(f". = ALIGN(0x{options.opts.ld_align_section_start:X});")
         self._write_symbol(section_start, ".")
 
     def _end_section(self, seg_name: str, cur_section: str, segment: Segment) -> None:

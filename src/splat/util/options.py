@@ -160,6 +160,8 @@ class SplatOpts:
     ld_align_segment_vram_end: bool
     # Allows to toggle aligning the `*_END` linker symbol for each section of each section.
     ld_align_section_vram_end: bool
+    # Aligns the start of every section (`*_START` symbol) to the given value (e.g. PS2 app.cmd ALIGN(128))
+    ld_align_section_start: Optional[int]
     # If enabled, the generated linker script will have a linker symbol for each data file
     ld_generate_symbol_per_data_segment: bool
     # Sets the default option for the `bss_contains_common` attribute of all segments.
@@ -557,6 +559,9 @@ def _parse_yaml(
         ),
         ld_align_segment_vram_end=p.parse_opt("ld_align_segment_vram_end", bool, True),
         ld_align_section_vram_end=p.parse_opt("ld_align_section_vram_end", bool, True),
+        ld_align_section_start=p.parse_optional_opt_with_default(
+            "ld_align_section_start", int, None
+        ),
         ld_generate_symbol_per_data_segment=p.parse_opt(
             "ld_generate_symbol_per_data_segment", bool, False
         ),

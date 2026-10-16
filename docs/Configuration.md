@@ -683,6 +683,14 @@ Setting this to `True` will make the `*_END` linker symbol of every section to b
 
 Defaults to `True`.
 
+### ld_align_section_start
+
+Specify that every section of every segment should be aligned before starting it, by emitting an `ALIGN` right before the section's `*_START` linker symbol.
+
+This option specifies the desired alignment value, or `null` if no alignment should be imposed on the section start. For example, PS2 executables linked with the SDK's `app.cmd` usually start each section on a 128 bytes boundary (`0x80`).
+
+Defaults to `null`.
+
 ### ld_generate_symbol_per_data_segment
 
 If enabled, the generated linker script will have a linker symbol for each data file.
